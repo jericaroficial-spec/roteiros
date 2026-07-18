@@ -152,7 +152,36 @@
   .bkremind.show{display:block}
   .bkremind b{font-size:13px}.bkremind p{margin:4px 0 8px;font-size:12px;color:var(--muted)}
   .bkremind .r-actions{display:flex;gap:6px}
-  @media(max-width:640px){th{position:static}.card-head .who{font-size:14px}.calcell{min-height:78px}.calitem{font-size:9px}}
+  /* dashboard */
+  .dashbar{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:14px}
+  .stat-tile{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px 14px;box-shadow:var(--shadow);cursor:pointer;transition:.15s;border-left:4px solid var(--brand)}
+  .stat-tile:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(15,23,42,.10)}
+  .stat-tile .n{font-size:26px;font-weight:800;line-height:1;color:var(--ink)}
+  .stat-tile .l{font-size:12px;color:var(--muted);margin-top:5px;font-weight:600}
+  .stat-tile.amber{border-left-color:var(--amber)} .stat-tile.amber .n{color:var(--amber)}
+  .stat-tile.green{border-left-color:#16a34a} .stat-tile.green .n{color:#15803d}
+  .stat-tile.blue{border-left-color:var(--accent)} .stat-tile.blue .n{color:var(--accent)}
+  /* quick filters */
+  .quickfilters{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:12px;align-items:center}
+  .qchip{border:1px solid var(--line);background:#fff;border-radius:20px;padding:6px 13px;font-size:12.5px;font-weight:600;color:var(--muted);cursor:pointer;transition:.12s}
+  .qchip:hover{border-color:var(--brand);color:var(--brand-d)}
+  .qchip.active{background:var(--brand);color:#fff;border-color:var(--brand)}
+  .qsep{width:1px;height:22px;background:var(--line);margin:0 3px}
+  /* card enhancements */
+  .card.js-open{cursor:pointer;transition:.15s;border-left:4px solid transparent}
+  .card.js-open:hover{border-left-color:var(--brand);transform:translateY(-1px);box-shadow:0 6px 16px rgba(15,23,42,.09)}
+  .card.sent{opacity:.72;border-left-color:#16a34a}
+  .card-foot{display:flex;gap:7px;align-items:center;flex-wrap:wrap;padding:0 16px 12px 16px}
+  .tag{font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;display:inline-flex;gap:4px;align-items:center}
+  .tag-ok{background:#dcfce7;color:#15803d} .tag-pend{background:var(--amber-l);color:var(--amber)} .tag-sent{background:#dcfce7;color:#15803d}
+  .card-foot .grow{flex:1}
+  /* general polish */
+  .card{transition:box-shadow .15s,transform .15s}
+  .btn{transition:.14s}
+  .btn:active{transform:scale(.97)}
+  .pill{letter-spacing:.2px}
+  @media(max-width:640px){th{position:static}.card-head .who{font-size:14px}.calcell{min-height:78px}.calitem{font-size:9px}
+    .dashbar{grid-template-columns:repeat(2,1fr)}.stat-tile .n{font-size:22px}main{padding:12px}}
 </style>
 </head>
 <body>
@@ -200,6 +229,8 @@
 
       <!-- ---- LISTA ---- -->
       <div id="listView">
+        <div id="dashBar" class="dashbar"></div>
+        <div id="quickFilters" class="quickfilters"></div>
         <div class="toolbar">
           <div><label class="fld">Buscar</label><input id="fSearch" placeholder="Nome, código, serviço..." style="min-width:200px"></div>
           <div><label class="fld">Início a partir de</label><input id="fFrom" type="date"></div>
@@ -403,6 +434,7 @@ function ymd(dstr){ // extrai YYYY-MM-DD do "2026-06-08 04:00:00 UTC"
 function fmtDia(ymdstr){if(!ymdstr)return '—';const[y,mo,d]=ymdstr.split('-').map(Number);return `${String(d).padStart(2,'0')}/${String(mo).padStart(2,'0')}`;}
 function fmtDiaLongo(ymdstr){if(!ymdstr)return '';const[y,mo,d]=ymdstr.split('-').map(Number);const dt=new Date(Date.UTC(y,mo-1,d));return `${String(d).padStart(2,'0')} de ${MESES_F[mo-1]} de ${y}`;}
 function diaSemana(ymdstr){if(!ymdstr)return '';const[y,mo,d]=ymdstr.split('-').map(Number);const dt=new Date(Date.UTC(y,mo-1,d));return DIAS[dt.getUTCDay()];}
+function fmtDataBR(iso){if(!iso)return '';const m=String(iso).match(/(\d{4})-(\d{2})-(\d{2})/);return m?m[3]+'/'+m[2]+'/'+m[1]:iso;}
 
 /* ---------- CSV parser (RFC4180, campos com aspas e quebras de linha) ---------- */
 function parseCSV(text){
@@ -584,6 +616,20 @@ function renderAll(){
 document.getElementById('btnCancelados').addEventListener('click',openCanceladosModal);
 
 /* ================= RESERVAS ================= */
+let statusFilter='all', activePreset='';
+function todayISO(){const d=new Date();return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate());}
+function addDaysISO(iso,n){const [y,m,d]=iso.split('-').map(Number);const dt=new Date(y,m-1,d+n);return dt.getFullYear()+'-'+pad2(dt.getMonth()+1)+'-'+pad2(dt.getDate());}
+function reservaPendencias(r){
+  const miss=new Set();
+  r.services.forEach(s=>{
+    const ov=getOv(r.code,s);
+    if(s.cat==='transfer'){ if(!ov.transferHora)miss.add('Transfer sem horário'); }
+    else if(s.cat==='voo'){ if(!ov.vooNum&&!ov.vooHora)miss.add('Voo sem dados'); }
+    else if(s.cat==='passeio'){ const c=cfgFor(s.ativ); if(!c.embInicio&&!c.previstoFim)miss.add('Passeio sem horário: '+s.ativ); }
+  });
+  return [...miss];
+}
+function isEnviada(r){return !!getResExtra(r.code).enviado;}
 function filteredRES(){
   const q=document.getElementById('fSearch').value.trim().toLowerCase();
   const from=document.getElementById('fFrom').value, to=document.getElementById('fTo').value;
@@ -591,6 +637,9 @@ function filteredRES(){
   let list=RES.filter(r=>{
     if(from&&(r.startDay||'')< from)return false;
     if(to&&(r.startDay||'9999')>to)return false;
+    if(statusFilter==='pend'&&reservaPendencias(r).length===0)return false;
+    if(statusFilter==='naoenviadas'&&isEnviada(r))return false;
+    if(statusFilter==='enviadas'&&!isEnviada(r))return false;
     if(q){
       const hay=(r.pagador+' '+r.viajante+' '+r.code+' '+r.services.map(s=>s.ativ).join(' ')).toLowerCase();
       if(!hay.includes(q))return false;
@@ -602,29 +651,89 @@ function filteredRES(){
   else list.sort((a,b)=>(a.startDay||'9999').localeCompare(b.startDay||'9999'));
   return list;
 }
+function renderDashboard(){
+  const hoje=todayISO(), em7=addDaysISO(hoje,7);
+  let cHoje=0,c7=0,cPend=0,cEnv=0;
+  RES.forEach(r=>{
+    if(r.startDay===hoje)cHoje++;
+    if(r.startDay&&r.startDay>=hoje&&r.startDay<=em7)c7++;
+    if(reservaPendencias(r).length)cPend++;
+    if(isEnviada(r))cEnv++;
+  });
+  document.getElementById('dashBar').innerHTML=`
+    <div class="stat-tile blue" data-act="hoje"><div class="n">${cHoje}</div><div class="l">Iniciam hoje</div></div>
+    <div class="stat-tile blue" data-act="7"><div class="n">${c7}</div><div class="l">Próximos 7 dias</div></div>
+    <div class="stat-tile amber" data-act="pend"><div class="n">${cPend}</div><div class="l">Com pendências</div></div>
+    <div class="stat-tile green" data-act="enviadas"><div class="n">${cEnv}</div><div class="l">Já enviadas</div></div>`;
+  document.querySelectorAll('#dashBar .stat-tile').forEach(t=>t.addEventListener('click',()=>{
+    const a=t.dataset.act;
+    if(a==='hoje')applyPreset('hoje');
+    else if(a==='7')applyPreset('7');
+    else if(a==='pend'){setStatus('pend');}
+    else if(a==='enviadas'){setStatus('enviadas');}
+  }));
+}
+function renderQuickFilters(){
+  const presets=[['','Todas as datas'],['hoje','Hoje'],['7','Próximos 7 dias'],['mes','Este mês']];
+  const status=[['all','Todas'],['pend','⚠ Pendentes'],['naoenviadas','Não enviadas'],['enviadas','✓ Enviadas']];
+  let html=presets.map(([v,l])=>`<span class="qchip ${activePreset===v?'active':''}" data-preset="${v}">${l}</span>`).join('');
+  html+='<span class="qsep"></span>';
+  html+=status.map(([v,l])=>`<span class="qchip ${statusFilter===v?'active':''}" data-status="${v}">${l}</span>`).join('');
+  const box=document.getElementById('quickFilters');box.innerHTML=html;
+  box.querySelectorAll('[data-preset]').forEach(c=>c.addEventListener('click',()=>applyPreset(c.dataset.preset)));
+  box.querySelectorAll('[data-status]').forEach(c=>c.addEventListener('click',()=>setStatus(c.dataset.status)));
+}
+function applyPreset(p){
+  activePreset=p;
+  const from=document.getElementById('fFrom'), to=document.getElementById('fTo');
+  const hoje=todayISO();
+  if(p==='hoje'){from.value=hoje;to.value=hoje;}
+  else if(p==='7'){from.value=hoje;to.value=addDaysISO(hoje,7);}
+  else if(p==='mes'){const[y,m]=hoje.split('-');from.value=y+'-'+m+'-01';to.value=y+'-'+m+'-'+pad2(new Date(+y,+m,0).getDate());}
+  else {from.value='';to.value='';}
+  renderReservas();
+}
+function setStatus(s){statusFilter=(statusFilter===s?'all':s);renderReservas();}
 function renderReservas(){
+  renderDashboard();renderQuickFilters();
   const list=filteredRES();
   document.getElementById('resSummary').textContent=list.length+' de '+RES.length+' reservas';
   const box=document.getElementById('reservasList');
   box.innerHTML=list.map(r=>reservaCard(r)).join('')||'<div class="empty">Nenhuma reserva encontrada com esses filtros.</div>';
-  document.querySelectorAll('#reservasList .js-open').forEach(c=>c.addEventListener('click',()=>openReservaModal(c.dataset.code)));
+  document.querySelectorAll('#reservasList .card').forEach(c=>{
+    c.querySelector('.card-head').addEventListener('click',()=>openReservaModal(c.dataset.code));
+  });
+  document.querySelectorAll('#reservasList .js-qmsg').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();openMessage(b.dataset.code);}));
+  document.querySelectorAll('#reservasList .js-qpdf').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();generatePDF(b.dataset.code);}));
+  document.querySelectorAll('#reservasList .js-sent').forEach(b=>b.addEventListener('click',e=>{
+    e.stopPropagation();const code=b.dataset.code;setResExtra(code,{enviado:!isEnviada(RES.find(r=>r.code===code))});renderReservas();
+  }));
   renderCalendar();
 }
 function catCounts(r){const c={};r.services.forEach(s=>c[s.cat]=(c[s.cat]||0)+1);return c;}
 function reservaCard(r){
   const cc=catCounts(r);
-  const pills=Object.keys(cc).map(k=>`<span class="pill ${CAT_PILL[k]}">${CAT_LABEL[k]} ${cc[k]}</span>`).join(' ');
+  const pills=Object.keys(cc).map(k=>`<span class="pill ${CAT_PILL[k]}">${CAT_LABEL[k]}${k==='seguro'?'':' '+cc[k]}</span>`).join(' ');
   const badge=r.startDay?`<div class="daybadge"><div class="d">${fmtDia(r.startDay).split('/')[0]}</div><div class="m">${MESES[parseInt(r.startDay.split('-')[1])-1]}</div></div>`
     :`<div class="daybadge" style="background:#94a3b8"><div class="d">—</div><div class="m">s/data</div></div>`;
-  return `<div class="card js-open" data-code="${esc(r.code)}">
+  const pend=reservaPendencias(r), enviada=isEnviada(r);
+  const statusTag=pend.length?`<span class="tag tag-pend">⚠ ${pend.length} a preencher</span>`:`<span class="tag tag-ok">✓ pronto</span>`;
+  const sentTag=enviada?`<span class="tag tag-sent">✓ Enviada</span>`:'';
+  return `<div class="card js-open ${enviada?'sent':''}" data-code="${esc(r.code)}">
     <div class="card-head">
       ${badge}
-      <div>
-        <div class="who">${esc(r.pagador)}${r.viajante?` <span class="muted" style="font-weight:400">· viajante: ${esc(r.viajante)}</span>`:''}</div>
+      <div style="flex:1">
+        <div class="who">${esc(r.pagador)}${r.viajante?` <span class="muted" style="font-weight:400">· viajante: ${esc(r.viajante)}</span>`:''} ${sentTag}</div>
         <div class="meta">Início ${r.startDay?diaSemana(r.startDay)+', '+fmtDiaLongo(r.startDay):'sem data'} · ${r.services.length} serviço(s) · cód. ${esc(r.code)}</div>
         <div style="margin-top:6px">${pills}</div>
       </div>
       <span class="chev" style="transform:rotate(90deg)">›</span>
+    </div>
+    <div class="card-foot">
+      ${statusTag}<div class="grow"></div>
+      <button class="btn btn-mini btn-outline js-qmsg" data-code="${esc(r.code)}">💬 Mensagem</button>
+      <button class="btn btn-mini btn-outline js-qpdf" data-code="${esc(r.code)}">📄 PDF</button>
+      <button class="btn btn-mini ${enviada?'btn-outline':'btn-solid'} js-sent" data-code="${esc(r.code)}">${enviada?'↩ Reabrir':'✓ Marcar enviada'}</button>
     </div>
   </div>`;
 }
@@ -667,8 +776,14 @@ function reservaBody(r){
   }
   // SEGUROS (grupo separado)
   if(seg.length){
-    html+=`<div class="rgroup-title seg">🛡️ Seguros</div>`;
-    seg.forEach(s=>{html+=svcRow(r,s);});
+    html+=`<div class="rgroup-title seg">🛡️ Seguro de viagem</div>
+      <div class="svc">
+        <div class="name">✅ Esta reserva possui seguro de viagem.</div>
+        <div class="fields">
+          <div class="f"><label class="fld">Início da vigência</label><input type="date" class="js-seg" data-field="seguroIni" value="${esc(ex.seguroIni||'')}"></div>
+          <div class="f"><label class="fld">Término da vigência</label><input type="date" class="js-seg" data-field="seguroFim" value="${esc(ex.seguroFim||'')}"></div>
+        </div>
+      </div>`;
   }
   // serviços removidos (possível cancelamento) — só interno
   const canc=canceladosDaReserva(r.code);
@@ -742,11 +857,14 @@ function bindReservaModalEvents(r){
     const sc=store.scripts.find(x=>x.id==b.dataset.id);if(sc)copyText(sc.titulo+'\n\n'+sc.texto,'Script copiado!');
   }));
   document.querySelectorAll('#modalBody .js-notas').forEach(t=>t.addEventListener('change',()=>{setResExtra(r.code,{notas:t.value});}));
+  document.querySelectorAll('#modalBody .js-seg').forEach(inp=>inp.addEventListener('change',e=>{setResExtra(r.code,{[e.target.dataset.field]:e.target.value});}));
   document.querySelectorAll('#modalBody .js-disp').forEach(b=>b.addEventListener('click',()=>{dispensarCancelado(b.dataset.k);renderAll();openReservaModal(r.code);}));
   document.querySelectorAll('#modalFoot .js-msg').forEach(b=>b.addEventListener('click',()=>openMessage(b.dataset.code)));
   document.querySelectorAll('#modalFoot .js-pdf').forEach(b=>b.addEventListener('click',()=>generatePDF(b.dataset.code)));
 }
-['fSearch','fFrom','fTo','fSort'].forEach(id=>document.getElementById(id).addEventListener('input',renderReservas));
+document.getElementById('fSearch').addEventListener('input',renderReservas);
+document.getElementById('fSort').addEventListener('input',renderReservas);
+['fFrom','fTo'].forEach(id=>document.getElementById(id).addEventListener('input',()=>{activePreset='';renderReservas();}));
 
 /* ================= ALTERNADOR DE VISÃO ================= */
 document.getElementById('vwLista').addEventListener('click',()=>setView('lista'));
@@ -1049,7 +1167,13 @@ function buildMessage(r){
   });
   // seguros
   const seg=r.services.filter(s=>s.cat==='seguro');
-  if(seg.length){L.push('🛡️ *SEGUROS*');seg.forEach(s=>L.push('• '+s.ativ+' ('+s.pax+' pax)'));L.push('');}
+  if(seg.length){
+    L.push('🛡️ *SEGURO DE VIAGEM*');
+    const exs=getResExtra(r.code);
+    if(exs.seguroIni||exs.seguroFim)L.push('Vigência: '+(fmtDataBR(exs.seguroIni)||'—')+' a '+(fmtDataBR(exs.seguroFim)||'—'));
+    else L.push('Reserva com seguro de viagem incluído.');
+    L.push('');
+  }
   // ajuste manual do roteiro
   const exMsg=getResExtra(r.code);
   if(exMsg.notas&&exMsg.notas.trim()){L.push('📝 *OBSERVAÇÕES*');exMsg.notas.trim().split('\n').forEach(l=>L.push(l));L.push('');}
@@ -1103,7 +1227,7 @@ function buildPrintHTML(r){
   // seguros
   const seg=r.services.filter(s=>s.cat==='seguro');
   let segHTML='';
-  if(seg.length){segHTML=`<div class="p-sec p-seg"><h3>🛡️ Seguros</h3>`+seg.map(s=>`<div class="p-svc">• ${esc(s.ativ)} — ${s.pax} pax</div>`).join('')+`</div>`;}
+  if(seg.length){const exs=getResExtra(r.code);const vig=(exs.seguroIni||exs.seguroFim)?('Vigência: '+(fmtDataBR(exs.seguroIni)||'—')+' a '+(fmtDataBR(exs.seguroFim)||'—')):'Reserva com seguro de viagem incluído.';segHTML=`<div class="p-sec p-seg"><h3>🛡️ Seguro de viagem</h3><div class="p-svc">${esc(vig)}</div></div>`;}
   // voos consolidados
   const voos=r.services.filter(s=>s.cat==='voo');
   let vooHTML='';
