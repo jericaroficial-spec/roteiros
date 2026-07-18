@@ -1,0 +1,1159 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Roteiros Jericar — Gestor de Reservas & Mensagens</title>
+<style>
+  :root{
+    --bg:#0f172a; --panel:#ffffff; --ink:#0f172a; --muted:#64748b; --line:#e2e8f0;
+    --brand:#0d9488; --brand-d:#0f766e; --brand-l:#ccfbf1; --accent:#2563eb;
+    --amber:#b45309; --amber-l:#fef3c7; --red:#dc2626; --soft:#f8fafc;
+    --shadow:0 1px 3px rgba(15,23,42,.08),0 1px 2px rgba(15,23,42,.06);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+       background:#eef2f6;color:var(--ink);font-size:14px;line-height:1.5}
+  header.top{background:linear-gradient(120deg,#0f766e,#0d9488);color:#fff;padding:14px 22px;
+       display:flex;align-items:center;gap:16px;flex-wrap:wrap;box-shadow:var(--shadow);position:sticky;top:0;z-index:50}
+  header.top h1{font-size:17px;margin:0;font-weight:700;letter-spacing:.2px}
+  header.top .sub{font-size:12px;opacity:.85;margin-top:2px}
+  .grow{flex:1}
+  .btn{border:0;border-radius:9px;padding:9px 14px;font-size:13px;font-weight:600;cursor:pointer;
+       display:inline-flex;align-items:center;gap:7px;transition:.12s;white-space:nowrap}
+  .btn-primary{background:#fff;color:var(--brand-d)}
+  .btn-primary:hover{background:#f0fdfa}
+  .btn-ghost{background:rgba(255,255,255,.14);color:#fff}
+  .btn-ghost:hover{background:rgba(255,255,255,.24)}
+  .btn-solid{background:var(--brand);color:#fff}
+  .btn-solid:hover{background:var(--brand-d)}
+  .btn-outline{background:#fff;color:var(--brand-d);border:1px solid var(--brand)}
+  .btn-outline:hover{background:var(--brand-l)}
+  .btn-sm{padding:6px 10px;font-size:12px;border-radius:8px}
+  .btn-mini{padding:4px 8px;font-size:11px;border-radius:7px}
+  .tabs{display:flex;gap:4px;background:#fff;padding:0 18px;border-bottom:1px solid var(--line);position:sticky;top:56px;z-index:40}
+  .tab{padding:13px 16px;font-weight:600;color:var(--muted);cursor:pointer;border-bottom:3px solid transparent;font-size:13.5px}
+  .tab.active{color:var(--brand-d);border-bottom-color:var(--brand)}
+  .tab .badge{background:var(--brand-l);color:var(--brand-d);border-radius:20px;padding:1px 8px;font-size:11px;margin-left:6px;font-weight:700}
+  main{max-width:1180px;margin:0 auto;padding:20px}
+  .empty{background:#fff;border:2px dashed var(--line);border-radius:16px;padding:48px 24px;text-align:center;color:var(--muted)}
+  .empty h2{color:var(--ink);margin:0 0 6px}
+  .toolbar{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:16px;
+       display:flex;gap:10px;align-items:center;flex-wrap:wrap;box-shadow:var(--shadow)}
+  input,select,textarea{font-family:inherit;font-size:13px;border:1px solid var(--line);border-radius:8px;padding:8px 10px;color:var(--ink);background:#fff}
+  input:focus,select:focus,textarea:focus{outline:2px solid var(--brand-l);border-color:var(--brand)}
+  label.fld{font-size:11px;color:var(--muted);font-weight:600;display:block;margin-bottom:3px;text-transform:uppercase;letter-spacing:.3px}
+  .stat{font-size:12px;color:var(--muted)}
+  .card{background:#fff;border:1px solid var(--line);border-radius:14px;margin-bottom:14px;box-shadow:var(--shadow);overflow:hidden}
+  .card-head{padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;flex-wrap:wrap}
+  .card-head:hover{background:var(--soft)}
+  .daybadge{background:var(--brand);color:#fff;border-radius:11px;text-align:center;padding:7px 11px;min-width:60px;line-height:1.15}
+  .daybadge .d{font-size:19px;font-weight:800}
+  .daybadge .m{font-size:10px;text-transform:uppercase;letter-spacing:.5px;opacity:.9}
+  .card-head .who{font-weight:700;font-size:15px}
+  .card-head .meta{font-size:12px;color:var(--muted);margin-top:2px}
+  .pill{font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;display:inline-block}
+  .pill-transfer{background:#dbeafe;color:#1d4ed8}
+  .pill-passeio{background:#dcfce7;color:#15803d}
+  .pill-voo{background:#ede9fe;color:#6d28d9}
+  .pill-hosp{background:#fef3c7;color:#b45309}
+  .pill-seguro{background:#fee2e2;color:#b91c1c}
+  .chev{margin-left:auto;color:var(--muted);transition:.2s;font-size:18px}
+  .card.open .chev{transform:rotate(90deg)}
+  .card-body{display:none;border-top:1px solid var(--line);padding:6px 16px 16px}
+  .card.open .card-body{display:block}
+  .dayblock{margin-top:14px}
+  .dayblock h4{margin:0 0 8px;font-size:13px;color:var(--brand-d);border-bottom:1px solid var(--line);padding-bottom:5px;display:flex;gap:8px;align-items:center}
+  .svc{border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:8px;background:var(--soft)}
+  .svc .name{font-weight:600}
+  .svc .line{font-size:12.5px;color:var(--muted);margin-top:3px}
+  .svc .fields{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+  .svc .fields .f{display:flex;flex-direction:column}
+  .svc .fields input{padding:5px 8px;font-size:12px;min-width:120px}
+  .obs{margin-top:6px;font-size:12px;background:#fff;border:1px dashed var(--line);border-radius:8px;padding:8px;white-space:pre-wrap;color:#475569;max-height:120px;overflow:auto}
+  .obs-toggle{font-size:11px;color:var(--accent);cursor:pointer;font-weight:600}
+  .scripts-note{background:var(--amber-l);border:1px solid #fde68a;border-radius:10px;padding:10px 12px;margin-top:12px}
+  .scripts-note h5{margin:0 0 6px;color:var(--amber);font-size:12.5px}
+  .card-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
+  table{width:100%;border-collapse:collapse;background:#fff}
+  th,td{text-align:left;padding:9px 11px;border-bottom:1px solid var(--line);font-size:13px;vertical-align:middle}
+  th{background:var(--soft);color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.3px}
+  td input,td select{padding:6px 8px;font-size:12.5px}
+  .tbl-wrap{background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden;box-shadow:var(--shadow)}
+  .sec-title{font-size:15px;font-weight:700;margin:22px 0 10px;color:var(--ink)}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}
+  .destino-chip{background:var(--brand-l);color:var(--brand-d);border-radius:8px;padding:4px 10px;font-size:12px;font-weight:600;display:inline-flex;gap:6px;align-items:center}
+  .destino-chip button{border:0;background:none;color:var(--brand-d);cursor:pointer;font-weight:800;font-size:13px}
+  .script-card{border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:10px;background:#fff}
+  .script-card .st{font-weight:700}
+  .script-card .sd{font-size:11px;color:var(--brand-d);background:var(--brand-l);padding:2px 8px;border-radius:20px;font-weight:600}
+  .script-card pre{white-space:pre-wrap;font-family:inherit;font-size:12.5px;color:#475569;background:var(--soft);border-radius:8px;padding:8px;margin:8px 0 0}
+  /* modal */
+  .modal-bg{position:fixed;inset:0;background:rgba(15,23,42,.55);display:none;align-items:center;justify-content:center;z-index:100;padding:20px}
+  .modal-bg.show{display:flex}
+  .modal{background:#fff;border-radius:16px;max-width:760px;width:100%;max-height:90vh;display:flex;flex-direction:column;overflow:hidden}
+  .modal-head{padding:14px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px}
+  .modal-head h3{margin:0;font-size:15px}
+  .modal-body{padding:16px 18px;overflow:auto}
+  .modal-foot{padding:12px 18px;border-top:1px solid var(--line);display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+  .msg-preview{white-space:pre-wrap;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px;
+       background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:14px;line-height:1.55}
+  .x{margin-left:auto;cursor:pointer;color:var(--muted);font-size:22px;border:0;background:none}
+  .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;
+       padding:10px 18px;border-radius:10px;font-size:13px;z-index:200;opacity:0;transition:.25s;pointer-events:none}
+  .toast.show{opacity:1}
+  .muted{color:var(--muted)}
+  .hint{font-size:12px;color:var(--muted);background:#f1f5f9;border-radius:8px;padding:8px 10px;margin-bottom:12px}
+  .count-tag{font-size:11px;background:#e2e8f0;color:#475569;border-radius:20px;padding:1px 8px;font-weight:700}
+  /* view switch */
+  .viewswitch{display:inline-flex;background:#fff;border:1px solid var(--line);border-radius:10px;padding:3px;margin-bottom:14px;box-shadow:var(--shadow)}
+  .vbtn{border:0;background:none;padding:7px 16px;border-radius:8px;font-weight:600;font-size:13px;color:var(--muted);cursor:pointer}
+  .vbtn.active{background:var(--brand);color:#fff}
+  /* calendar */
+  .calbar{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:10px;box-shadow:var(--shadow);flex-wrap:wrap}
+  .calTitle{font-size:16px;font-weight:700;margin-left:8px;text-transform:capitalize}
+  .calgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px;box-shadow:var(--shadow)}
+  .caldow{font-size:10.5px;font-weight:700;color:var(--muted);text-transform:uppercase;text-align:left;padding:2px 4px;letter-spacing:.5px}
+  .calcell{min-height:110px;border:1px solid var(--line);border-radius:8px;padding:5px 6px;background:#fff;position:relative;overflow:hidden}
+  .calcell.out{background:#f8fafc}
+  .calcell.today{border:2px solid var(--brand);box-shadow:0 0 0 2px var(--brand-l)}
+  .calcell .dnum{font-size:12px;font-weight:700;color:#334155}
+  .calcell.out .dnum{color:#cbd5e1}
+  .calcell .cbadge{position:absolute;top:5px;right:6px;background:var(--accent);color:#fff;font-size:10px;font-weight:800;border-radius:20px;min-width:17px;height:17px;display:flex;align-items:center;justify-content:center;padding:0 4px}
+  .calitem{font-size:10.5px;line-height:1.25;padding:2px 5px;margin-top:3px;border-radius:5px;background:#f1f5f9;border-left:3px solid #94a3b8;
+       white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
+  .calitem:hover{background:#e2e8f0}
+  .calitem.c-transfer{border-left-color:#2563eb}.calitem.c-passeio{border-left-color:#16a34a}
+  .calitem.c-voo{border-left-color:#7c3aed}.calitem.c-hosp{border-left-color:#d97706}.calitem.c-seguro{border-left-color:#dc2626}
+  .calmore{font-size:10.5px;color:var(--accent);font-weight:700;cursor:pointer;margin-top:3px;display:inline-block}
+  .callegend{display:flex;gap:16px;flex-wrap:wrap;margin-top:10px;font-size:11.5px;color:var(--muted)}
+  .callegend .dot{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:middle}
+  /* passeios groups */
+  .pgroup{background:#fff;border:1px solid var(--line);border-radius:12px;margin-bottom:12px;box-shadow:var(--shadow);overflow:hidden}
+  .pgroup-head{padding:10px 14px;font-weight:700;background:var(--soft);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:8px;cursor:pointer}
+  .pgroup-head .gcount{font-size:11px;background:#e2e8f0;color:#475569;border-radius:20px;padding:1px 9px}
+  .pgroup.perdidos .pgroup-head{background:#fef3c7;color:#92400e}
+  .pgroup-body{display:block}
+  .pgroup.collapsed .pgroup-body{display:none}
+  /* reserva modal */
+  .rmodal .modal{max-width:820px}
+  .rgroup-title{font-size:13px;font-weight:700;color:var(--brand-d);margin:16px 0 8px;padding-bottom:5px;border-bottom:2px solid var(--brand-l);display:flex;gap:8px;align-items:center}
+  .rgroup-title.hosp{color:var(--amber);border-color:#fde68a}
+  .rgroup-title.seg{color:var(--red);border-color:#fecaca}
+  /* cancelamentos */
+  .cancblock{border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:10px;background:#fff}
+  .canchead{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px}
+  .rgroup-title.canc{color:#92400e;border-color:#fde68a}
+  #btnCancelados{background:#fef3c7;color:#92400e;border:1px solid #fde68a;margin-left:10px}
+  #btnCancelados:hover{background:#fde68a}
+  /* backup reminder */
+  .bkremind{position:fixed;bottom:20px;right:20px;background:#fff;border:1px solid var(--line);border-left:4px solid var(--brand);
+       border-radius:12px;box-shadow:0 8px 24px rgba(15,23,42,.18);padding:12px 14px;z-index:2147483002;max-width:290px;display:none}
+  .bkremind.show{display:block}
+  .bkremind b{font-size:13px}.bkremind p{margin:4px 0 8px;font-size:12px;color:var(--muted)}
+  .bkremind .r-actions{display:flex;gap:6px}
+  @media(max-width:640px){th{position:static}.card-head .who{font-size:14px}.calcell{min-height:78px}.calitem{font-size:9px}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div>
+    <h1>🌴 Roteiros Jericar</h1>
+    <div class="sub">Gestor de reservas, mensagens de WhatsApp e roteiros em PDF</div>
+  </div>
+  <div class="grow"></div>
+  <span id="dataStatus" class="stat" style="color:#e0f2f1"></span>
+  <label class="btn btn-primary" for="fileInput">📥 Importar CSV da Binamik</label>
+  <input id="fileInput" type="file" accept=".csv,text/csv" style="display:none">
+  <button class="btn btn-ghost btn-sm" id="btnBackup" title="Baixa um arquivo com seus destinos, horários e scripts">💾 Backup</button>
+  <label class="btn btn-ghost btn-sm" for="cfgInput" title="Restaura destinos, horários e scripts de um backup">♻️ Restaurar</label>
+  <input id="cfgInput" type="file" accept=".json,application/json" style="display:none">
+  <button class="btn btn-ghost btn-sm" id="btnLimparDados" title="Remove os dados importados (mantém destinos e scripts)">🗑️ Limpar</button>
+</header>
+<div id="storageWarn" style="display:none;background:#fef3c7;color:#92400e;padding:8px 22px;font-size:12.5px;border-bottom:1px solid #fde68a">
+  ⚠️ Este navegador está bloqueando o salvamento automático (comum em aba anônima, Safari ou visualizadores). Suas configurações <b>não somem enquanto a aba fica aberta</b>, mas para guardar entre sessões use o botão <b>💾 Backup</b> e depois <b>♻️ Restaurar</b>.
+</div>
+
+<nav class="tabs">
+  <div class="tab active" data-tab="reservas">Reservas & Serviços <span class="badge" id="tabResCount">0</span></div>
+  <div class="tab" data-tab="passeios">Passeios & Destinos <span class="badge" id="tabPassCount">0</span></div>
+  <div class="tab" data-tab="scripts">Scripts por Destino <span class="badge" id="tabScrCount">0</span></div>
+</nav>
+
+<main>
+  <!-- ============ RESERVAS ============ -->
+  <section id="pane-reservas">
+    <div id="reservasEmpty" class="empty">
+      <div style="font-size:42px">📄</div>
+      <h2>Importe o arquivo exportado da Binamik</h2>
+      <p>Clique em <b>“Importar CSV da Binamik”</b> no topo para carregar os dados das reservas.<br>
+      Seus destinos, horários de passeios e scripts ficam salvos neste navegador entre importações.</p>
+    </div>
+    <div id="reservasContent" style="display:none">
+      <div style="display:flex;align-items:center;flex-wrap:wrap;margin-bottom:14px">
+        <div class="viewswitch" style="margin-bottom:0">
+          <button class="vbtn active" id="vwLista">📋 Lista</button>
+          <button class="vbtn" id="vwCal">📅 Calendário</button>
+        </div>
+        <button class="btn btn-sm" id="btnCancelados" style="display:none">⚠ Cancelamentos</button>
+      </div>
+
+      <!-- ---- LISTA ---- -->
+      <div id="listView">
+        <div class="toolbar">
+          <div><label class="fld">Buscar</label><input id="fSearch" placeholder="Nome, código, serviço..." style="min-width:200px"></div>
+          <div><label class="fld">Início a partir de</label><input id="fFrom" type="date"></div>
+          <div><label class="fld">Início até</label><input id="fTo" type="date"></div>
+          <div><label class="fld">Ordenar</label>
+            <select id="fSort">
+              <option value="date">Data de início ↑</option>
+              <option value="date-desc">Data de início ↓</option>
+              <option value="name">Nome do cliente</option>
+            </select>
+          </div>
+          <div class="grow"></div>
+          <div style="text-align:right"><label class="fld">Resultado</label><span id="resSummary" class="stat"></span></div>
+        </div>
+        <div class="hint">Cada cartão é uma reserva, com o <b>dia de início</b> (primeiro serviço) em destaque. Clique para abrir a janela da reserva, complementar dados e gerar a mensagem ou o PDF.</div>
+        <div id="reservasList"></div>
+      </div>
+
+      <!-- ---- CALENDÁRIO ---- -->
+      <div id="calView" style="display:none">
+        <div class="calbar">
+          <button class="btn btn-outline btn-sm" id="calPrev">‹</button>
+          <button class="btn btn-outline btn-sm" id="calToday">Hoje</button>
+          <button class="btn btn-outline btn-sm" id="calNext">›</button>
+          <div class="calTitle" id="calTitle"></div>
+          <div class="grow"></div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <label class="fld" style="margin:0">Data:</label>
+            <select id="calMode">
+              <option value="servico">Serviço (por dia)</option>
+              <option value="inicio">Início da reserva</option>
+            </select>
+          </div>
+        </div>
+        <div id="calGrid" class="calgrid"></div>
+        <div class="callegend">
+          <span><i class="dot" style="background:#2563eb"></i>Transfer</span>
+          <span><i class="dot" style="background:#16a34a"></i>Passeio</span>
+          <span><i class="dot" style="background:#7c3aed"></i>Aéreo</span>
+          <span><i class="dot" style="background:#d97706"></i>Hospedagem</span>
+          <span><i class="dot" style="background:#dc2626"></i>Seguro</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ PASSEIOS ============ -->
+  <section id="pane-passeios" style="display:none">
+    <div id="passeiosEmpty" class="empty">
+      <div style="font-size:42px">🧭</div>
+      <h2>Nenhum passeio carregado ainda</h2>
+      <p>Importe o CSV para listar os passeios. Aqui você define o <b>destino</b> de cada passeio e os horários de embarque/finalização, que atualizam automaticamente todas as mensagens.</p>
+    </div>
+    <div id="passeiosContent" style="display:none">
+      <div class="hint">Os produtos são separados automaticamente em grupos (<b>Transfer</b>, <b>Passeios</b>, etc.). O que o sistema não conseguir classificar cai em <b>“Perdidos”</b> — use a coluna <b>Grupo</b> para mover para o lugar certo. Para os passeios, defina o <b>destino</b> e os horários de embarque/término, que atualizam todas as mensagens.</div>
+      <div class="toolbar">
+        <div><label class="fld">Buscar produto</label><input id="pSearch" placeholder="Filtrar..." style="min-width:220px"></div>
+        <div><label class="fld">Filtrar por destino</label><select id="pDestFilter"><option value="">Todos</option></select></div>
+        <div class="grow"></div>
+        <button class="btn btn-outline btn-sm" id="btnGerenciarDestinos">📍 Gerenciar destinos</button>
+      </div>
+      <div id="passeiosGroups"></div>
+    </div>
+  </section>
+
+  <!-- ============ SCRIPTS ============ -->
+  <section id="pane-scripts" style="display:none">
+    <div style="display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap">
+      <div style="flex:1;min-width:280px">
+        <div class="sec-title">Scripts por destino</div>
+        <div class="hint">Cadastre mensagens/orientações importantes ligadas a um destino. Quando um cliente tiver passeio nesse destino, os scripts aparecem na reserva prontos para copiar.</div>
+        <div class="card" style="padding:14px">
+          <div class="row">
+            <div style="flex:1;min-width:160px"><label class="fld">Destino</label>
+              <select id="scrDestino"></select></div>
+            <div style="flex:2;min-width:200px"><label class="fld">Título do script</label>
+              <input id="scrTitulo" placeholder="Ex.: Orientações Lençóis Maranhenses"></div>
+          </div>
+          <div style="margin-top:10px"><label class="fld">Texto do script</label>
+            <textarea id="scrTexto" rows="4" style="width:100%" placeholder="Escreva aqui a mensagem que deve ser enviada ao cliente com passeio neste destino..."></textarea></div>
+          <div style="margin-top:10px;display:flex;gap:8px">
+            <button class="btn btn-solid btn-sm" id="btnAddScript">➕ Salvar script</button>
+            <button class="btn btn-outline btn-sm" id="btnCancelEditScript" style="display:none">Cancelar edição</button>
+          </div>
+        </div>
+        <div id="scriptsList" style="margin-top:14px"></div>
+      </div>
+      <div style="width:270px;min-width:220px">
+        <div class="sec-title">Destinos</div>
+        <div class="card" style="padding:14px">
+          <div class="row">
+            <div style="flex:1"><input id="newDestino" placeholder="Novo destino..."></div>
+            <button class="btn btn-solid btn-sm" id="btnAddDestino">Adicionar</button>
+          </div>
+          <div id="destinosList" style="margin-top:12px;display:flex;flex-direction:column;gap:6px"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- Modal -->
+<div class="modal-bg" id="modalBg">
+  <div class="modal">
+    <div class="modal-head"><h3 id="modalTitle">Mensagem</h3><button class="x" id="modalClose">×</button></div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-foot" id="modalFoot"></div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<!-- lembrete de backup -->
+<div class="bkremind" id="bkRemind">
+  <b>💾 Lembrete de backup</b>
+  <p>Faz uns minutos que você trabalha sem salvar. Que tal baixar um backup das configurações agora?</p>
+  <div class="r-actions">
+    <button class="btn btn-solid btn-sm" id="bkRemindNow">Fazer backup</button>
+    <button class="btn btn-outline btn-sm" id="bkRemindLater">Agora não</button>
+  </div>
+</div>
+
+<!-- print container -->
+<div id="printRoot"></div>
+
+<script>
+/* =========================================================================
+   ROTEIROS JERICAR — app 100% client-side. Persistência em localStorage.
+   ========================================================================= */
+const LS='jericar_v1';
+// Detecta se o localStorage está disponível (falha em aba anônima, Safari file://, visualizadores)
+let LS_OK=false;
+try{const k='__t'+Date.now();localStorage.setItem(k,'1');localStorage.removeItem(k);LS_OK=true;}catch(e){LS_OK=false;}
+let warnedStorage=false;
+let changedSinceBackup=false;
+const store=loadStore();
+function loadStore(){
+  if(LS_OK){try{const s=JSON.parse(localStorage.getItem(LS));if(s)return Object.assign(defStore(),s);}catch(e){}}
+  return defStore();
+}
+function defStore(){return{destinos:[],scripts:[],passeioCfg:{},svcOverrides:{},resExtra:{},groupOverrides:{},lastSnapshot:null,cancelados:{}};}
+// dados importados ficam SÓ em memória (grandes demais p/ localStorage). Config/scripts persistem.
+let ROWS=null, FILENAME='';
+function persistObj(){return{v:1,ts:new Date().toISOString(),destinos:store.destinos,scripts:store.scripts,passeioCfg:store.passeioCfg,svcOverrides:store.svcOverrides,resExtra:store.resExtra,groupOverrides:store.groupOverrides,lastSnapshot:store.lastSnapshot,cancelados:store.cancelados};}
+function save(){
+  changedSinceBackup=true;
+  if(!LS_OK){showStorageWarn();return;}
+  try{localStorage.setItem(LS,JSON.stringify(persistObj()));}
+  catch(e){LS_OK=false;showStorageWarn();}
+}
+function showStorageWarn(){
+  const el=document.getElementById('storageWarn');if(el)el.style.display='block';
+  if(!warnedStorage){warnedStorage=true;toast('Salvamento automático indisponível — use 💾 Backup para guardar.');}
+}
+// ---- Backup / Restaurar (funciona em qualquer navegador) ----
+function doBackup(){
+  const data=JSON.stringify(persistObj(),null,2);
+  const dt=new Date().toISOString().slice(0,10);
+  const b=new Blob([data],{type:'application/json'});const u=URL.createObjectURL(b);
+  const a=document.createElement('a');a.href=u;a.download='backup_roteiros_jericar_'+dt+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(u),1500);
+  toast('Backup baixado.');
+  changedSinceBackup=false;
+  const el=document.getElementById('bkRemind');if(el)el.classList.remove('show');
+}
+function doRestore(file,{merge}={}){
+  const rd=new FileReader();
+  rd.onload=()=>{
+    try{
+      const s=JSON.parse(rd.result);
+      if(!s||(!s.destinos&&!s.scripts&&!s.passeioCfg)){toast('Arquivo de backup inválido.');return;}
+      if(merge){
+        (s.destinos||[]).forEach(d=>{if(!store.destinos.includes(d))store.destinos.push(d);});
+        store.destinos.sort((a,b)=>a.localeCompare(b));
+        const ids=new Set(store.scripts.map(x=>x.id));
+        (s.scripts||[]).forEach(x=>{if(!ids.has(x.id))store.scripts.push(x);});
+        Object.assign(store.passeioCfg,s.passeioCfg||{});
+        Object.assign(store.svcOverrides,s.svcOverrides||{});
+        Object.assign(store.resExtra,s.resExtra||{});
+        Object.assign(store.groupOverrides,s.groupOverrides||{});
+        Object.assign(store.cancelados,s.cancelados||{});
+        if(s.lastSnapshot)store.lastSnapshot=s.lastSnapshot;
+      }else{
+        store.destinos=s.destinos||[];store.scripts=s.scripts||[];store.passeioCfg=s.passeioCfg||{};
+        store.svcOverrides=s.svcOverrides||{};store.resExtra=s.resExtra||{};store.groupOverrides=s.groupOverrides||{};
+        store.cancelados=s.cancelados||{};store.lastSnapshot=s.lastSnapshot||null;
+      }
+      save();buildReservations();renderAll();
+      toast('Configurações restauradas'+(s.ts?' (backup de '+s.ts.slice(0,10)+')':'')+'.');
+    }catch(e){toast('Não foi possível ler o backup.');}
+  };
+  rd.readAsText(file,'utf-8');
+}
+
+/* ---------- util ---------- */
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2200);}
+function esc(s){return (s==null?'':String(s)).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+const MESES=['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+const MESES_F=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+const DIAS=['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
+function ymd(dstr){ // extrai YYYY-MM-DD do "2026-06-08 04:00:00 UTC"
+  if(!dstr)return '';const m=String(dstr).match(/(\d{4})-(\d{2})-(\d{2})/);return m?m[1]+'-'+m[2]+'-'+m[3]:'';}
+function fmtDia(ymdstr){if(!ymdstr)return '—';const[y,mo,d]=ymdstr.split('-').map(Number);return `${String(d).padStart(2,'0')}/${String(mo).padStart(2,'0')}`;}
+function fmtDiaLongo(ymdstr){if(!ymdstr)return '';const[y,mo,d]=ymdstr.split('-').map(Number);const dt=new Date(Date.UTC(y,mo-1,d));return `${String(d).padStart(2,'0')} de ${MESES_F[mo-1]} de ${y}`;}
+function diaSemana(ymdstr){if(!ymdstr)return '';const[y,mo,d]=ymdstr.split('-').map(Number);const dt=new Date(Date.UTC(y,mo-1,d));return DIAS[dt.getUTCDay()];}
+
+/* ---------- CSV parser (RFC4180, campos com aspas e quebras de linha) ---------- */
+function parseCSV(text){
+  text=text.replace(/^﻿/,'');
+  const rows=[];let row=[],field='',i=0,q=false;
+  while(i<text.length){
+    const c=text[i];
+    if(q){
+      if(c==='"'){ if(text[i+1]==='"'){field+='"';i++;} else q=false; }
+      else field+=c;
+    }else{
+      if(c==='"')q=true;
+      else if(c===','){row.push(field);field='';}
+      else if(c==='\n'){row.push(field);rows.push(row);row=[];field='';}
+      else if(c==='\r'){/*skip*/}
+      else field+=c;
+    }
+    i++;
+  }
+  if(field!==''||row.length){row.push(field);rows.push(row);}
+  return rows;
+}
+function csvToObjects(text){
+  const arr=parseCSV(text);
+  if(!arr.length)return[];
+  const head=arr[0].map(h=>h.trim());
+  const out=[];
+  for(let r=1;r<arr.length;r++){
+    if(arr[r].length===1&&arr[r][0]==='')continue;
+    const o={};head.forEach((h,c)=>o[h]=arr[r][c]!==undefined?arr[r][c]:'');
+    out.push(o);
+  }
+  return out;
+}
+
+/* ---------- categorização ---------- */
+function categoria(atividade){
+  const a=(atividade||'').toLowerCase();
+  if(a.includes('seguro'))return 'seguro';
+  if(a.includes('hospedagem'))return 'hosp';
+  if(a.trim()==='aéreo'||a.trim()==='aereo'||a.includes('aéreo')||a.includes('aereo')||/\bvoo\b/.test(a))return 'voo';
+  if(a.includes('transfer'))return 'transfer';
+  return 'passeio';
+}
+const CAT_LABEL={transfer:'Transfer',passeio:'Passeio',voo:'Aéreo',hosp:'Hospedagem',seguro:'Seguro'};
+const CAT_PILL={transfer:'pill-transfer',passeio:'pill-passeio',voo:'pill-voo',hosp:'pill-hosp',seguro:'pill-seguro'};
+
+/* ---------- construir reservas a partir das linhas ---------- */
+let RES=[]; // reservas processadas
+function buildReservations(){
+  RES=[];
+  const rows=ROWS;
+  if(!rows)return;
+  const byCode={};
+  rows.forEach(r=>{
+    const code=(r['Codigo de Reserva']||'—').trim()||'—';
+    (byCode[code]=byCode[code]||[]).push(r);
+  });
+  Object.entries(byCode).forEach(([code,items])=>{
+    // pagador / viajante
+    const pagador=(items.find(i=>i['Nome do Pagador'])||{})['Nome do Pagador']||'(sem nome)';
+    const viajante=(items.find(i=>i['Viajante'] && i['Viajante'].trim())||{})['Viajante']||'';
+    const email=(items.find(i=>i['Email do Pagador'])||{})['Email do Pagador']||'';
+    const obs=(items.find(i=>i['Observacão da reserva'] && i['Observacão da reserva'].trim())||{})['Observacão da reserva']||'';
+    // agrupar serviços iguais (mesma data + atividade) => conta pessoas
+    const gmap={};
+    items.forEach(it=>{
+      const day=ymd(it['Data do Passeio']);
+      const ativ=(it['Atividade']||'').trim();
+      const key=day+'||'+ativ;
+      if(!gmap[key])gmap[key]={day,ativ,cat:categoria(ativ),pax:0,tarifas:{},status:it['Status']};
+      gmap[key].pax++;
+      const tf=(it['Tarifa']||'').trim();if(tf)gmap[key].tarifas[tf]=(gmap[key].tarifas[tf]||0)+1;
+    });
+    const services=Object.values(gmap).sort((a,b)=>(a.day||'').localeCompare(b.day||'')||a.ativ.localeCompare(b.ativ));
+    const dated=services.filter(s=>s.day);
+    const startDay=dated.length?dated[0].day:'';
+    const endDay=dated.length?dated[dated.length-1].day:'';
+    RES.push({code,pagador,viajante,email,obs,services,startDay,endDay});
+  });
+  RES.sort((a,b)=>(a.startDay||'9999').localeCompare(b.startDay||'9999'));
+}
+
+/* ---------- passeios (tipos distintos) ---------- */
+function passeioTypes(){
+  const map={};
+  RES.forEach(r=>r.services.forEach(s=>{
+    if(s.cat!=='passeio')return;
+    if(!map[s.ativ])map[s.ativ]={ativ:s.ativ,count:0};
+    map[s.ativ].count++;
+  }));
+  return Object.values(map).sort((a,b)=>a.ativ.localeCompare(b.ativ));
+}
+function cfgFor(ativ){return store.passeioCfg[ativ]||{destino:'',embInicio:'',embTermino:'',previstoFim:''};}
+function destinoOf(ativ){return (store.passeioCfg[ativ]||{}).destino||'';}
+
+/* ---------- grupos de produtos (aba Passeios & Destinos) ---------- */
+const GROUPS=['Transfer','Passeios','Aéreo','Hospedagem','Seguro','Perdidos'];
+function autoGroup(ativ){
+  const c=categoria(ativ);
+  if(c==='transfer')return 'Transfer';
+  if(c==='voo')return 'Aéreo';
+  if(c==='hosp')return 'Hospedagem';
+  if(c==='seguro')return 'Seguro';
+  // categoria 'passeio' é o coringa — decide Passeios vs Perdidos por palavra-chave
+  const a=ativ.toLowerCase();
+  const tour=/(passeio|city ?tour|quadri|buggy|lagoa|circuito|revoada|boia|bate e volta|cumbuco|praia|mirar|ponta|canto|cabur|andorinha|gaivota|bet[âa]nia|emendada|am[ée]rica|leste|oeste|jeri|atins|mangue|delta|guar[áa]|dunas|passeio priv|compartilhad)/;
+  return tour.test(a)?'Passeios':'Perdidos';
+}
+function groupOf(ativ){return store.groupOverrides[ativ]||autoGroup(ativ);}
+function setGroup(ativ,g){ if(g===autoGroup(ativ))delete store.groupOverrides[ativ]; else store.groupOverrides[ativ]=g; save(); }
+
+/* svc override key */
+function ovKey(code,s){return code+'::'+s.day+'::'+s.ativ;}
+function getOv(code,s){return store.svcOverrides[ovKey(code,s)]||{};}
+function setOv(code,s,patch){const k=ovKey(code,s);store.svcOverrides[k]=Object.assign({},store.svcOverrides[k],patch);save();}
+function getResExtra(code){return store.resExtra[code]||{};}
+function setResExtra(code,patch){store.resExtra[code]=Object.assign({},store.resExtra[code],patch);save();}
+
+/* =========================================================================
+   RENDER + UI
+   ========================================================================= */
+/* ---- Tabs ---- */
+document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>{
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+  t.classList.add('active');
+  const name=t.dataset.tab;
+  ['reservas','passeios','scripts'].forEach(p=>document.getElementById('pane-'+p).style.display=(p===name?'':'none'));
+}));
+
+/* ---- Import ---- */
+document.getElementById('fileInput').addEventListener('change',e=>{
+  const f=e.target.files[0];if(!f)return;
+  const rd=new FileReader();
+  rd.onload=()=>{
+    try{
+      const objs=csvToObjects(rd.result);
+      if(!objs.length||!('Codigo de Reserva' in objs[0])){toast('Arquivo não parece ser a exportação da Binamik.');return;}
+      ROWS=objs;FILENAME=f.name;
+      buildReservations();
+      const chg=detectChanges();
+      renderAll();
+      toast(RES.length+' reservas importadas'+(chg.removedCount>0?(' · '+chg.removedCount+' serviço(s) removido(s)'):'')+'.');
+      if(chg.removedCount>0)setTimeout(()=>{document.getElementById('vwLista').click();openCanceladosModal();},400);
+    }catch(err){toast('Erro ao ler o arquivo.');console.error(err);}
+  };
+  rd.readAsText(f,'utf-8');
+  e.target.value='';
+});
+document.getElementById('btnBackup').addEventListener('click',doBackup);
+document.getElementById('cfgInput').addEventListener('change',e=>{
+  const f=e.target.files[0];if(!f)return;
+  const merge=confirm('Restaurar backup.\n\nOK = MESCLAR com o que já existe (recomendado)\nCancelar = SUBSTITUIR tudo pelo backup');
+  doRestore(f,{merge});e.target.value='';
+});
+document.getElementById('btnLimparDados').addEventListener('click',()=>{
+  if(!confirm('Remover os dados importados desta sessão? Destinos, horários de passeios e scripts serão mantidos.'))return;
+  ROWS=null;FILENAME='';
+  buildReservations();renderAll();
+});
+
+/* ---- master render ---- */
+function renderAll(){
+  const has=!!ROWS;
+  document.getElementById('reservasEmpty').style.display=has?'none':'';
+  document.getElementById('reservasContent').style.display=has?'':'none';
+  document.getElementById('passeiosEmpty').style.display=has?'none':'';
+  document.getElementById('passeiosContent').style.display=has?'':'none';
+  document.getElementById('dataStatus').textContent=has?('📊 '+FILENAME+' · '+RES.length+' reservas'):'';
+  document.getElementById('tabResCount').textContent=RES.length;
+  document.getElementById('tabPassCount').textContent=has?allProducts().length:0;
+  document.getElementById('tabScrCount').textContent=store.scripts.length;
+  const nc=Object.keys(store.cancelados||{}).length;
+  const cb=document.getElementById('btnCancelados');
+  if(cb){cb.style.display=(has&&nc)?'':'none';cb.textContent='⚠ Cancelamentos ('+nc+')';}
+  if(has){renderReservas();renderPasseios();}
+  renderScriptsTab();renderDestinosSelects();
+}
+document.getElementById('btnCancelados').addEventListener('click',openCanceladosModal);
+
+/* ================= RESERVAS ================= */
+function filteredRES(){
+  const q=document.getElementById('fSearch').value.trim().toLowerCase();
+  const from=document.getElementById('fFrom').value, to=document.getElementById('fTo').value;
+  const sort=document.getElementById('fSort').value;
+  let list=RES.filter(r=>{
+    if(from&&(r.startDay||'')< from)return false;
+    if(to&&(r.startDay||'9999')>to)return false;
+    if(q){
+      const hay=(r.pagador+' '+r.viajante+' '+r.code+' '+r.services.map(s=>s.ativ).join(' ')).toLowerCase();
+      if(!hay.includes(q))return false;
+    }
+    return true;
+  });
+  if(sort==='name')list.sort((a,b)=>a.pagador.localeCompare(b.pagador));
+  else if(sort==='date-desc')list.sort((a,b)=>(b.startDay||'').localeCompare(a.startDay||''));
+  else list.sort((a,b)=>(a.startDay||'9999').localeCompare(b.startDay||'9999'));
+  return list;
+}
+function renderReservas(){
+  const list=filteredRES();
+  document.getElementById('resSummary').textContent=list.length+' de '+RES.length+' reservas';
+  const box=document.getElementById('reservasList');
+  box.innerHTML=list.map(r=>reservaCard(r)).join('')||'<div class="empty">Nenhuma reserva encontrada com esses filtros.</div>';
+  document.querySelectorAll('#reservasList .js-open').forEach(c=>c.addEventListener('click',()=>openReservaModal(c.dataset.code)));
+  renderCalendar();
+}
+function catCounts(r){const c={};r.services.forEach(s=>c[s.cat]=(c[s.cat]||0)+1);return c;}
+function reservaCard(r){
+  const cc=catCounts(r);
+  const pills=Object.keys(cc).map(k=>`<span class="pill ${CAT_PILL[k]}">${CAT_LABEL[k]} ${cc[k]}</span>`).join(' ');
+  const badge=r.startDay?`<div class="daybadge"><div class="d">${fmtDia(r.startDay).split('/')[0]}</div><div class="m">${MESES[parseInt(r.startDay.split('-')[1])-1]}</div></div>`
+    :`<div class="daybadge" style="background:#94a3b8"><div class="d">—</div><div class="m">s/data</div></div>`;
+  return `<div class="card js-open" data-code="${esc(r.code)}">
+    <div class="card-head">
+      ${badge}
+      <div>
+        <div class="who">${esc(r.pagador)}${r.viajante?` <span class="muted" style="font-weight:400">· viajante: ${esc(r.viajante)}</span>`:''}</div>
+        <div class="meta">Início ${r.startDay?diaSemana(r.startDay)+', '+fmtDiaLongo(r.startDay):'sem data'} · ${r.services.length} serviço(s) · cód. ${esc(r.code)}</div>
+        <div style="margin-top:6px">${pills}</div>
+      </div>
+      <span class="chev" style="transform:rotate(90deg)">›</span>
+    </div>
+  </div>`;
+}
+/* ---- janela (modal) da reserva ---- */
+function openReservaModal(code){
+  const r=RES.find(x=>x.code===code);if(!r)return;
+  document.getElementById('modalBg').classList.add('rmodal');
+  openModal('Reserva — '+r.pagador+'  ·  cód. '+r.code, reservaBody(r),
+    `<button class="btn btn-outline btn-sm js-msg" data-code="${esc(r.code)}">💬 Mensagem WhatsApp (TXT)</button>
+     <button class="btn btn-solid btn-sm js-pdf" data-code="${esc(r.code)}">📄 Gerar PDF do roteiro</button>`);
+  bindReservaModalEvents(r);
+}
+function reservaBody(r){
+  const main=r.services.filter(s=>s.cat==='transfer'||s.cat==='passeio'||s.cat==='voo');
+  const hosp=r.services.filter(s=>s.cat==='hosp');
+  const seg=r.services.filter(s=>s.cat==='seguro');
+  let html='';
+  if(r.obs&&r.obs.trim()){
+    html+=`<div style="margin-bottom:4px"><span class="obs-toggle js-obs">📝 Ver observação original da reserva ▾</span>
+      <div class="obs" style="display:none">${esc(r.obs.trim())}</div></div>`;
+  }
+  // ajuste manual do roteiro (entra na mensagem e no PDF)
+  const ex=getResExtra(r.code);
+  html+=`<div style="margin:8px 0 4px"><label class="fld">📝 Ajuste manual do roteiro <span class="muted" style="text-transform:none;font-weight:400">(texto livre — entra na mensagem e no PDF)</span></label>
+    <textarea class="js-notas" rows="2" style="width:100%" placeholder="Ex.: transfer do dia 20 remarcado para 07h; passeio X substituído por Y...">${esc(ex.notas||'')}</textarea></div>`;
+  // serviços por dia
+  const days={};main.forEach(s=>{const d=s.day||'sem-data';(days[d]=days[d]||[]).push(s);});
+  const dayKeys=Object.keys(days).sort((a,b)=>a==='sem-data'?1:b==='sem-data'?-1:a.localeCompare(b));
+  if(dayKeys.length){
+    dayKeys.forEach(d=>{
+      html+=`<div class="dayblock"><h4>📅 ${d==='sem-data'?'Sem data definida':fmtDia(d)+' — '+diaSemana(d)}</h4>`;
+      days[d].forEach(s=>{html+=svcRow(r,s);});
+      html+='</div>';
+    });
+  }else{html+='<div class="muted" style="font-size:12px;margin:8px 0">Nenhum serviço terrestre/aéreo nesta reserva.</div>';}
+  // HOSPEDAGEM (grupo separado)
+  if(hosp.length){
+    html+=`<div class="rgroup-title hosp">🏨 Hospedagem <span class="muted" style="font-weight:400;font-size:11px">(fora da mensagem; aparece só no PDF)</span></div>`;
+    hosp.forEach(s=>{html+=svcRow(r,s);});
+  }
+  // SEGUROS (grupo separado)
+  if(seg.length){
+    html+=`<div class="rgroup-title seg">🛡️ Seguros</div>`;
+    seg.forEach(s=>{html+=svcRow(r,s);});
+  }
+  // serviços removidos (possível cancelamento) — só interno
+  const canc=canceladosDaReserva(r.code);
+  if(canc.length){
+    html+=`<div class="rgroup-title canc">⚠ Serviços removidos (possível cancelamento) <span class="muted" style="font-weight:400;font-size:11px">— não entram na mensagem nem no PDF</span></div>`;
+    canc.forEach(c=>{html+=`<div class="svc" style="background:#fffbeb;border-color:#fde68a">
+      <div class="name">${esc(c.ativ)}</div>
+      <div class="line">${c.day?fmtDia(c.day)+' · ':''}${c.pax} pax · detectado em ${esc(c.detectedAt||'')}
+      <button class="btn btn-mini btn-outline js-disp" data-k="${esc(c.k)}">Dispensar</button></div></div>`;});
+  }
+  // scripts sugeridos
+  const dests=new Set();r.services.forEach(s=>{if(s.cat==='passeio'){const d=destinoOf(s.ativ);if(d)dests.add(d);}});
+  const relScripts=store.scripts.filter(sc=>dests.has(sc.destino));
+  if(dests.size){
+    html+=`<div class="scripts-note"><h5>📌 Scripts sugeridos (${relScripts.length}) — destinos: ${[...dests].map(esc).join(', ')}</h5>`;
+    if(relScripts.length){
+      relScripts.forEach(sc=>{html+=`<div style="margin-bottom:6px"><b>${esc(sc.titulo)}</b> <span class="muted">(${esc(sc.destino)})</span>
+        <button class="btn btn-mini btn-outline js-copy-script" data-id="${sc.id}">Copiar</button></div>`;});
+    }else{html+='<div class="muted" style="font-size:12px">Nenhum script cadastrado para esses destinos ainda. Cadastre na aba “Scripts por Destino”.</div>';}
+    html+='</div>';
+  }
+  return html;
+}
+function tarifaStr(s){const parts=Object.entries(s.tarifas).map(([k,v])=>v+'× '+k);return parts.join(', ');}
+function svcRow(r,s){
+  const ov=getOv(r.code,s);const k=ovKey(r.code,s);
+  let extra='';
+  if(s.cat==='passeio'){
+    const cfg=cfgFor(s.ativ);const dest=cfg.destino?` · 📍 ${esc(cfg.destino)}`:'';
+    const emb=(cfg.embInicio||cfg.embTermino)?`embarque ${esc(cfg.embInicio||'—')}${cfg.embTermino?'–'+esc(cfg.embTermino):''}`:'';
+    const fim=cfg.previstoFim?`finaliza por volta de ${esc(cfg.previstoFim)}`:'';
+    const sched=[emb,fim].filter(Boolean).join(' · ');
+    extra=`<div class="line">${sched?'🕒 '+sched:'<span class="muted">⚠ defina horários deste passeio na aba “Passeios & Destinos”</span>'}${dest}</div>`;
+  }else if(s.cat==='transfer'){
+    extra=`<div class="fields">
+      <div class="f"><label class="fld">Horário do transfer</label><input class="js-ov" data-k="${esc(k)}" data-field="transferHora" value="${esc(ov.transferHora||'')}" placeholder="ex.: 06:00"></div>
+      <div class="f"><label class="fld">Janela de embarque — início</label><input class="js-ov" data-k="${esc(k)}" data-field="janelaIni" value="${esc(ov.janelaIni||'')}" placeholder="ex.: 05:40"></div>
+      <div class="f"><label class="fld">Janela de embarque — fim</label><input class="js-ov" data-k="${esc(k)}" data-field="janelaFim" value="${esc(ov.janelaFim||'')}" placeholder="ex.: 06:10"></div>
+      <div class="f"><label class="fld">Embarque (local)</label><input class="js-ov" data-k="${esc(k)}" data-field="embarque" value="${esc(ov.embarque||'')}" placeholder="hotel / ponto"></div>
+      <div class="f"><label class="fld">Desembarque (local)</label><input class="js-ov" data-k="${esc(k)}" data-field="desembarque" value="${esc(ov.desembarque||'')}" placeholder="destino"></div>
+    </div>`;
+  }else if(s.cat==='voo'){
+    extra=`<div class="fields">
+      <div class="f"><label class="fld">Nº do voo</label><input class="js-ov" data-k="${esc(k)}" data-field="vooNum" value="${esc(ov.vooNum||'')}" placeholder="ex.: G3 2136"></div>
+      <div class="f"><label class="fld">Horário do voo</label><input class="js-ov" data-k="${esc(k)}" data-field="vooHora" value="${esc(ov.vooHora||'')}" placeholder="ex.: 14:20"></div>
+      <div class="f"><label class="fld">Trecho</label><input class="js-ov" data-k="${esc(k)}" data-field="vooTrecho" value="${esc(ov.vooTrecho||'')}" placeholder="ex.: FOR → GRU"></div>
+    </div>`;
+  }else if(s.cat==='hosp'){
+    extra=`<div class="fields">
+      <div class="f"><label class="fld">Hospedagem / hotel</label><input class="js-ov" data-k="${esc(k)}" data-field="hospNome" value="${esc(ov.hospNome||'')}" placeholder="nome do hotel/pousada"></div>
+      <div class="f"><label class="fld">Check-in</label><input class="js-ov" data-k="${esc(k)}" data-field="hospIn" value="${esc(ov.hospIn||'')}" placeholder="data/hora"></div>
+      <div class="f"><label class="fld">Check-out</label><input class="js-ov" data-k="${esc(k)}" data-field="hospOut" value="${esc(ov.hospOut||'')}" placeholder="data/hora"></div>
+    </div>`;
+  }
+  return `<div class="svc">
+    <div class="name"><span class="pill ${CAT_PILL[s.cat]}">${CAT_LABEL[s.cat]}</span> ${esc(s.ativ)||'(sem nome)'}</div>
+    <div class="line">👥 ${s.pax} pessoa(s)${tarifaStr(s)?' · '+esc(tarifaStr(s)):''}</div>
+    ${extra}
+  </div>`;
+}
+function bindReservaModalEvents(r){
+  document.querySelectorAll('#modalBody .js-ov').forEach(inp=>inp.addEventListener('change',e=>{
+    const k=e.target.dataset.k,field=e.target.dataset.field;
+    store.svcOverrides[k]=Object.assign({},store.svcOverrides[k],{[field]:e.target.value});save();
+  }));
+  document.querySelectorAll('#modalBody .js-obs').forEach(t=>t.addEventListener('click',()=>{
+    const box=t.nextElementSibling;const show=box.style.display==='none';box.style.display=show?'block':'none';
+    t.textContent=(show?'📝 Ocultar observação original da reserva ▴':'📝 Ver observação original da reserva ▾');
+  }));
+  document.querySelectorAll('#modalBody .js-copy-script').forEach(b=>b.addEventListener('click',()=>{
+    const sc=store.scripts.find(x=>x.id==b.dataset.id);if(sc)copyText(sc.titulo+'\n\n'+sc.texto,'Script copiado!');
+  }));
+  document.querySelectorAll('#modalBody .js-notas').forEach(t=>t.addEventListener('change',()=>{setResExtra(r.code,{notas:t.value});}));
+  document.querySelectorAll('#modalBody .js-disp').forEach(b=>b.addEventListener('click',()=>{dispensarCancelado(b.dataset.k);renderAll();openReservaModal(r.code);}));
+  document.querySelectorAll('#modalFoot .js-msg').forEach(b=>b.addEventListener('click',()=>openMessage(b.dataset.code)));
+  document.querySelectorAll('#modalFoot .js-pdf').forEach(b=>b.addEventListener('click',()=>generatePDF(b.dataset.code)));
+}
+['fSearch','fFrom','fTo','fSort'].forEach(id=>document.getElementById(id).addEventListener('input',renderReservas));
+
+/* ================= ALTERNADOR DE VISÃO ================= */
+document.getElementById('vwLista').addEventListener('click',()=>setView('lista'));
+document.getElementById('vwCal').addEventListener('click',()=>setView('cal'));
+function setView(v){
+  document.getElementById('vwLista').classList.toggle('active',v==='lista');
+  document.getElementById('vwCal').classList.toggle('active',v==='cal');
+  document.getElementById('listView').style.display=v==='lista'?'':'none';
+  document.getElementById('calView').style.display=v==='cal'?'':'none';
+  if(v==='cal')renderCalendar();
+}
+
+/* ================= CALENDÁRIO ================= */
+let calRef=null; // {y, m(1-12)}
+function calInit(){ if(!calRef){const d=new Date();calRef={y:d.getFullYear(),m:d.getMonth()+1};} }
+function calShift(delta){ calInit(); let m=calRef.m+delta,y=calRef.y; while(m<1){m+=12;y--;} while(m>12){m-=12;y++;} calRef={y,m}; renderCalendar(); }
+document.getElementById('calPrev').addEventListener('click',()=>calShift(-1));
+document.getElementById('calNext').addEventListener('click',()=>calShift(1));
+document.getElementById('calToday').addEventListener('click',()=>{const d=new Date();calRef={y:d.getFullYear(),m:d.getMonth()+1};renderCalendar();});
+document.getElementById('calMode').addEventListener('change',renderCalendar);
+function pad2(n){return String(n).padStart(2,'0');}
+function calIndex(mode){
+  const idx={};
+  if(mode==='inicio'){
+    RES.forEach(r=>{if(r.startDay)(idx[r.startDay]=idx[r.startDay]||[]).push({label:r.pagador,cat:'',code:r.code});});
+  }else{
+    RES.forEach(r=>r.services.forEach(s=>{if(s.day)(idx[s.day]=idx[s.day]||[]).push({label:s.pax+'× '+s.ativ,cat:s.cat,code:r.code});}));
+  }
+  return idx;
+}
+function renderCalendar(){
+  if(!ROWS)return;
+  calInit();
+  const mode=document.getElementById('calMode').value;
+  const {y,m}=calRef;
+  document.getElementById('calTitle').textContent=MESES_F[m-1]+' '+y;
+  const idx=calIndex(mode);
+  const today=(function(){const d=new Date();return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate());})();
+  const first=new Date(y,m-1,1);
+  const startDow=first.getDay();
+  const daysInMonth=new Date(y,m,0).getDate();
+  const totalCells=Math.ceil((startDow+daysInMonth)/7)*7;
+  const dows=['DOM','SEG','TER','QUA','QUI','SEX','SÁB'];
+  let html=dows.map(d=>`<div class="caldow">${d}</div>`).join('');
+  for(let i=0;i<totalCells;i++){
+    const dayNum=i-startDow+1;
+    const inMonth=dayNum>=1&&dayNum<=daysInMonth;
+    let cell='';
+    if(!inMonth){
+      cell=`<div class="calcell out"></div>`;
+    }else{
+      const ymdStr=y+'-'+pad2(m)+'-'+pad2(dayNum);
+      const items=idx[ymdStr]||[];
+      const isToday=ymdStr===today;
+      let inner=`<div class="dnum">${dayNum}</div>`;
+      if(items.length)inner+=`<div class="cbadge">${items.length}</div>`;
+      const show=items.slice(0,3);
+      show.forEach(it=>{inner+=`<div class="calitem c-${it.cat}" data-code="${esc(it.code)}" title="${esc(it.label)}">${esc(it.label)}</div>`;});
+      if(items.length>3)inner+=`<span class="calmore" data-day="${ymdStr}">+${items.length-3} mais</span>`;
+      cell=`<div class="calcell${isToday?' today':''}">${inner}</div>`;
+    }
+    html+=cell;
+  }
+  const grid=document.getElementById('calGrid');
+  grid.innerHTML=html;
+  grid.querySelectorAll('.calitem').forEach(el=>el.addEventListener('click',()=>openReservaModal(el.dataset.code)));
+  grid.querySelectorAll('.calmore').forEach(el=>el.addEventListener('click',()=>openDayModal(el.dataset.day,mode,idx[el.dataset.day]||[])));
+}
+function openDayModal(ymdStr,mode,items){
+  const title=(mode==='inicio'?'Reservas que iniciam em ':'Serviços em ')+fmtDia(ymdStr)+' — '+diaSemana(ymdStr);
+  const body=items.map(it=>`<div class="svc js-openday" data-code="${esc(it.code)}" style="cursor:pointer">
+     <div class="name"><span class="pill ${CAT_PILL[it.cat]||''}">${CAT_LABEL[it.cat]||'Reserva'}</span> ${esc(it.label)}</div>
+     <div class="line muted">clique para abrir a reserva ›</div></div>`).join('');
+  openModal(title, body||'<div class="muted">Nada neste dia.</div>','');
+  document.querySelectorAll('#modalBody .js-openday').forEach(el=>el.addEventListener('click',()=>{
+    document.getElementById('modalBg').classList.remove('show');openReservaModal(el.dataset.code);
+  }));
+}
+
+/* ================= CANCELAMENTOS (comparação entre importações) ================= */
+function detectChanges(){
+  const newMap={};
+  RES.forEach(r=>r.services.forEach(s=>{newMap[ovKey(r.code,s)]={code:r.code,pagador:r.pagador,ativ:s.ativ,day:s.day,pax:s.pax};}));
+  let removedCount=0,backCount=0;
+  const hoje=new Date().toISOString().slice(0,10);
+  if(store.lastSnapshot&&store.lastSnapshot.items){
+    const old=store.lastSnapshot.items;
+    Object.keys(old).forEach(k=>{ if(!newMap[k]&&!store.cancelados[k]){ store.cancelados[k]=Object.assign({},old[k],{detectedAt:hoje}); removedCount++; } });
+    Object.keys(store.cancelados).forEach(k=>{ if(newMap[k]){ delete store.cancelados[k]; backCount++; } });
+  }
+  store.lastSnapshot={at:new Date().toISOString(),items:newMap};
+  save();
+  return {removedCount,backCount,total:Object.keys(store.cancelados).length};
+}
+function canceladosDaReserva(code){
+  return Object.entries(store.cancelados).filter(([k,v])=>v.code===code).map(([k,v])=>Object.assign({k},v));
+}
+function dispensarCancelado(k){ delete store.cancelados[k]; save(); }
+function openCanceladosModal(){
+  const list=Object.entries(store.cancelados).map(([k,v])=>Object.assign({k},v));
+  if(!list.length){openModal('Cancelamentos','<div class="muted">Nenhum serviço removido pendente. 🎉</div>','');return;}
+  // agrupar por reserva
+  const byCode={};list.forEach(c=>{(byCode[c.code]=byCode[c.code]||{pagador:c.pagador,items:[]}).items.push(c);});
+  let body='<div class="hint">Estes serviços estavam numa importação anterior e <b>sumiram na mais recente</b> (provável cancelamento). Servem só para você revisar — <b>não entram na mensagem nem no PDF do cliente</b>.</div>';
+  Object.entries(byCode).forEach(([code,g])=>{
+    const existe=RES.some(r=>r.code===code);
+    body+=`<div class="cancblock"><div class="canchead"><b>${esc(g.pagador)}</b> <span class="muted">· cód. ${esc(code)}</span>
+      ${existe?`<button class="btn btn-mini btn-outline js-openres" data-code="${esc(code)}">Abrir reserva</button>`:'<span class="pill pill-seguro">reserva inteira sumiu</span>'}</div>`;
+    g.items.forEach(c=>{body+=`<div class="svc" style="background:#fffbeb;border-color:#fde68a">
+      <div class="name">${esc(c.ativ)}</div>
+      <div class="line">${c.day?fmtDia(c.day)+' · ':''}${c.pax} pax · detectado em ${esc(c.detectedAt||'')}
+      <button class="btn btn-mini btn-outline js-disp" data-k="${esc(c.k)}">Dispensar</button></div></div>`;});
+    body+='</div>';
+  });
+  openModal('⚠ Cancelamentos ('+list.length+')', body,
+    '<button class="btn btn-outline btn-sm" id="dispAll">Dispensar todos</button>');
+  document.querySelectorAll('#modalBody .js-openres').forEach(b=>b.addEventListener('click',()=>{closeModal();openReservaModal(b.dataset.code);}));
+  document.querySelectorAll('#modalBody .js-disp').forEach(b=>b.addEventListener('click',()=>{dispensarCancelado(b.dataset.k);renderAll();openCanceladosModal();}));
+  const da=document.getElementById('dispAll');if(da)da.addEventListener('click',()=>{if(confirm('Dispensar TODOS os cancelamentos pendentes?')){store.cancelados={};save();renderAll();closeModal();}});
+}
+
+/* ================= PASSEIOS ================= */
+function allProducts(){
+  const map={};
+  RES.forEach(r=>r.services.forEach(s=>{if(!map[s.ativ])map[s.ativ]={ativ:s.ativ,count:0};map[s.ativ].count++;}));
+  return Object.values(map).sort((a,b)=>a.ativ.localeCompare(b.ativ));
+}
+function renderPasseios(){
+  const q=document.getElementById('pSearch').value.trim().toLowerCase();
+  const df=document.getElementById('pDestFilter').value;
+  let prods=allProducts().filter(t=>{
+    if(q&&!t.ativ.toLowerCase().includes(q))return false;
+    if(df&&destinoOf(t.ativ)!==df)return false;
+    return true;
+  });
+  const byG={};GROUPS.forEach(g=>byG[g]=[]);
+  prods.forEach(t=>{const g=groupOf(t.ativ);(byG[g]=byG[g]||[]).push(t);});
+  const groupSel=cur=>GROUPS.map(g=>`<option value="${g}" ${cur===g?'selected':''}>${g}</option>`).join('');
+  let html='';
+  GROUPS.forEach(g=>{
+    const items=byG[g];if(!items||!items.length)return;
+    const showSched=(g==='Passeios'||g==='Perdidos');
+    html+=`<div class="pgroup ${g==='Perdidos'?'perdidos':''}">
+      <div class="pgroup-head js-gcollapse"><span>${g==='Perdidos'?'🧭 ':''}${g}</span><span class="gcount">${items.length}</span><span class="muted" style="font-weight:400;font-size:12px;margin-left:auto">▾ clique p/ recolher</span></div>
+      <div class="pgroup-body"><div class="tbl-wrap" style="border:0;box-shadow:none;border-radius:0">
+      <table><thead><tr><th style="min-width:210px">Produto</th><th>Ocorr.</th><th style="min-width:140px">Destino</th>
+        ${showSched?'<th>Início emb.</th><th>Térm. emb.</th><th>Térm. previsto</th>':''}<th style="min-width:115px">Grupo</th></tr></thead><tbody>`;
+    items.forEach(t=>{
+      const c=cfgFor(t.ativ);
+      const sel=store.destinos.map(d=>`<option value="${esc(d)}" ${c.destino===d?'selected':''}>${esc(d)}</option>`).join('');
+      html+=`<tr data-ativ="${esc(t.ativ)}">
+        <td><b>${esc(t.ativ)}</b></td>
+        <td><span class="count-tag">${t.count}×</span></td>
+        <td><select class="js-pcfg" data-f="destino"><option value="">—</option>${sel}</select></td>
+        ${showSched?`<td><input class="js-pcfg" data-f="embInicio" value="${esc(c.embInicio)}" placeholder="08:00" style="width:76px"></td>
+        <td><input class="js-pcfg" data-f="embTermino" value="${esc(c.embTermino)}" placeholder="08:30" style="width:76px"></td>
+        <td><input class="js-pcfg" data-f="previstoFim" value="${esc(c.previstoFim)}" placeholder="17:00" style="width:76px"></td>`:''}
+        <td><select class="js-pgroup">${groupSel(groupOf(t.ativ))}</select></td>
+      </tr>`;
+    });
+    html+='</tbody></table></div></div></div>';
+  });
+  const box=document.getElementById('passeiosGroups');
+  box.innerHTML=html||'<div class="empty">Nenhum produto encontrado.</div>';
+  box.querySelectorAll('.js-pcfg').forEach(el=>el.addEventListener('change',e=>{
+    const ativ=e.target.closest('tr').dataset.ativ,f=e.target.dataset.f;
+    store.passeioCfg[ativ]=Object.assign({destino:'',embInicio:'',embTermino:'',previstoFim:''},store.passeioCfg[ativ],{[f]:e.target.value});
+    save();
+  }));
+  box.querySelectorAll('.js-pgroup').forEach(el=>el.addEventListener('change',e=>{
+    const ativ=e.target.closest('tr').dataset.ativ;setGroup(ativ,e.target.value);renderPasseios();
+  }));
+  box.querySelectorAll('.js-gcollapse').forEach(h=>h.addEventListener('click',()=>h.closest('.pgroup').classList.toggle('collapsed')));
+  const pf=document.getElementById('pDestFilter');const cur=pf.value;
+  pf.innerHTML='<option value="">Todos os destinos</option>'+store.destinos.map(d=>`<option value="${esc(d)}">${esc(d)}</option>`).join('');
+  pf.value=cur;
+}
+document.getElementById('pSearch').addEventListener('input',renderPasseios);
+document.getElementById('pDestFilter').addEventListener('change',renderPasseios);
+document.getElementById('btnGerenciarDestinos').addEventListener('click',()=>{
+  document.querySelector('.tab[data-tab="scripts"]').click();
+  document.getElementById('newDestino').focus();
+});
+
+/* ================= DESTINOS & SCRIPTS ================= */
+function renderDestinosSelects(){
+  const opts='<option value="">Selecione um destino</option>'+store.destinos.map(d=>`<option value="${esc(d)}">${esc(d)}</option>`).join('');
+  const sd=document.getElementById('scrDestino');const cur=sd.value;sd.innerHTML=opts;sd.value=cur;
+  // lista destinos
+  document.getElementById('destinosList').innerHTML=store.destinos.length?store.destinos.map(d=>{
+    const n=Object.values(store.passeioCfg).filter(c=>c.destino===d).length;
+    return `<div class="destino-chip">📍 ${esc(d)} <span class="muted" style="font-weight:400">(${n} passeio(s))</span><button class="js-del-dest" data-d="${esc(d)}" title="Remover">×</button></div>`;
+  }).join(''):'<span class="muted" style="font-size:12px">Nenhum destino ainda. Adicione ao lado.</span>';
+  document.querySelectorAll('.js-del-dest').forEach(b=>b.addEventListener('click',()=>{
+    const d=b.dataset.d;
+    if(!confirm('Remover o destino "'+d+'"? Passeios e scripts ligados a ele ficarão sem destino.'))return;
+    store.destinos=store.destinos.filter(x=>x!==d);
+    Object.values(store.passeioCfg).forEach(c=>{if(c.destino===d)c.destino='';});
+    store.scripts.forEach(s=>{if(s.destino===d)s.destino='';});
+    save();renderAll();
+  }));
+}
+document.getElementById('btnAddDestino').addEventListener('click',()=>{
+  const v=document.getElementById('newDestino').value.trim();if(!v)return;
+  if(store.destinos.includes(v)){toast('Destino já existe.');return;}
+  store.destinos.push(v);store.destinos.sort((a,b)=>a.localeCompare(b));document.getElementById('newDestino').value='';save();renderAll();
+});
+document.getElementById('newDestino').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('btnAddDestino').click();});
+
+let editingScript=null;
+function renderScriptsTab(){
+  const box=document.getElementById('scriptsList');
+  const byDest={};store.scripts.forEach(s=>{(byDest[s.destino||'(sem destino)']=byDest[s.destino||'(sem destino)']||[]).push(s);});
+  const keys=Object.keys(byDest).sort();
+  box.innerHTML=keys.length?keys.map(d=>`<div class="sec-title" style="font-size:13px;margin:8px 0 6px">📍 ${esc(d)}</div>`+
+    byDest[d].map(s=>`<div class="script-card">
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <span class="st">${esc(s.titulo)}</span><span class="sd">${esc(s.destino||'sem destino')}</span>
+        <div style="margin-left:auto;display:flex;gap:6px">
+          <button class="btn btn-mini btn-outline js-copy-s" data-id="${s.id}">Copiar</button>
+          <button class="btn btn-mini btn-outline js-edit-s" data-id="${s.id}">Editar</button>
+          <button class="btn btn-mini btn-outline js-del-s" data-id="${s.id}" style="color:var(--red);border-color:#fecaca">Excluir</button>
+        </div>
+      </div>
+      <pre>${esc(s.texto)}</pre>
+    </div>`).join('')).join(''):'<div class="muted" style="font-size:13px">Nenhum script cadastrado ainda.</div>';
+  box.querySelectorAll('.js-copy-s').forEach(b=>b.addEventListener('click',()=>{const s=store.scripts.find(x=>x.id==b.dataset.id);copyText(s.titulo+'\n\n'+s.texto,'Script copiado!');}));
+  box.querySelectorAll('.js-del-s').forEach(b=>b.addEventListener('click',()=>{if(confirm('Excluir este script?')){store.scripts=store.scripts.filter(x=>x.id!=b.dataset.id);save();renderAll();}}));
+  box.querySelectorAll('.js-edit-s').forEach(b=>b.addEventListener('click',()=>{
+    const s=store.scripts.find(x=>x.id==b.dataset.id);editingScript=s.id;
+    document.getElementById('scrDestino').value=s.destino;document.getElementById('scrTitulo').value=s.titulo;document.getElementById('scrTexto').value=s.texto;
+    document.getElementById('btnAddScript').textContent='💾 Atualizar script';document.getElementById('btnCancelEditScript').style.display='';
+    document.querySelector('.tab[data-tab="scripts"]').click();window.scrollTo(0,0);
+  }));
+}
+document.getElementById('btnAddScript').addEventListener('click',()=>{
+  const destino=document.getElementById('scrDestino').value;
+  const titulo=document.getElementById('scrTitulo').value.trim();
+  const texto=document.getElementById('scrTexto').value.trim();
+  if(!titulo||!texto){toast('Preencha título e texto.');return;}
+  if(editingScript){const s=store.scripts.find(x=>x.id==editingScript);Object.assign(s,{destino,titulo,texto});editingScript=null;}
+  else{store.scripts.push({id:Date.now()+''+Math.floor((RES.length+store.scripts.length+1)),destino,titulo,texto});}
+  save();
+  document.getElementById('scrTitulo').value='';document.getElementById('scrTexto').value='';
+  document.getElementById('btnAddScript').textContent='➕ Salvar script';document.getElementById('btnCancelEditScript').style.display='none';
+  renderAll();toast('Script salvo.');
+});
+document.getElementById('btnCancelEditScript').addEventListener('click',()=>{
+  editingScript=null;document.getElementById('scrTitulo').value='';document.getElementById('scrTexto').value='';
+  document.getElementById('btnAddScript').textContent='➕ Salvar script';document.getElementById('btnCancelEditScript').style.display='none';
+});
+
+/* ================= COPY / DOWNLOAD ================= */
+function copyText(txt,msg){
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(()=>toast(msg||'Copiado!'),()=>fallbackCopy(txt,msg));}
+  else fallbackCopy(txt,msg);
+}
+function fallbackCopy(txt,msg){const ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');toast(msg||'Copiado!');}catch(e){toast('Copie manualmente.');}document.body.removeChild(ta);}
+function downloadFile(name,content,type){const b=new Blob([content],{type:type||'text/plain;charset=utf-8'});const u=URL.createObjectURL(b);const a=document.createElement('a');a.href=u;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(u),1500);}
+
+/* ================= MODAL ================= */
+function openModal(title,bodyHTML,footHTML){
+  document.getElementById('modalTitle').textContent=title;
+  document.getElementById('modalBody').innerHTML=bodyHTML;
+  document.getElementById('modalFoot').innerHTML=footHTML||'';
+  document.getElementById('modalBg').classList.add('show');
+}
+function closeModal(){const bg=document.getElementById('modalBg');bg.classList.remove('show');bg.classList.remove('rmodal');}
+document.getElementById('modalClose').addEventListener('click',closeModal);
+document.getElementById('modalBg').addEventListener('click',e=>{if(e.target.id==='modalBg')closeModal();});
+
+/* ================= MENSAGEM WHATSAPP (TXT) ================= */
+function buildMessage(r){
+  const L=[];
+  L.push('*ROTEIRO DE VIAGEM — '+r.pagador.toUpperCase()+'*');
+  if(r.startDay)L.push(diaSemana(r.startDay)+', '+fmtDiaLongo(r.startDay)+(r.endDay&&r.endDay!==r.startDay?'  até  '+fmtDiaLongo(r.endDay):''));
+  L.push('');
+  // agrupar por dia (exceto seguro e hospedagem — hospedagem não vai na mensagem)
+  const days={};r.services.forEach(s=>{if(s.cat==='seguro'||s.cat==='hosp')return;const d=s.day||'sem-data';(days[d]=days[d]||[]).push(s);});
+  const dayKeys=Object.keys(days).sort((a,b)=>a==='sem-data'?1:b==='sem-data'?-1:a.localeCompare(b));
+  dayKeys.forEach(d=>{
+    L.push('📅 '+(d==='sem-data'?'A definir':fmtDia(d)+' ('+diaSemana(d)+')'));
+    days[d].forEach(s=>{
+      const ov=getOv(r.code,s);
+      L.push('• '+s.ativ+'  ('+s.pax+' pax)');
+      if(s.cat==='passeio'){
+        const c=cfgFor(s.ativ);
+        if(c.embInicio||c.embTermino)L.push('   ⏰ Embarque: '+(c.embInicio||'—')+(c.embTermino?' às '+c.embTermino:''));
+        if(c.previstoFim)L.push('   🏁 Término por volta de '+c.previstoFim);
+      }else if(s.cat==='transfer'){
+        if(ov.transferHora)L.push('   🚐 Transfer às '+ov.transferHora);
+        if(ov.janelaIni||ov.janelaFim)L.push('   🕓 Janela de embarque: '+(ov.janelaIni||'—')+(ov.janelaFim?' às '+ov.janelaFim:''));
+        if(ov.embarque||ov.desembarque)L.push('   📍 '+(ov.embarque||'—')+' → '+(ov.desembarque||'—'));
+      }else if(s.cat==='voo'){
+        const parts=[];if(ov.vooNum)parts.push('Voo '+ov.vooNum);if(ov.vooHora)parts.push('às '+ov.vooHora);if(ov.vooTrecho)parts.push('('+ov.vooTrecho+')');
+        if(parts.length)L.push('   ✈️ '+parts.join(' '));
+      }
+    });
+    L.push('');
+  });
+  // seguros
+  const seg=r.services.filter(s=>s.cat==='seguro');
+  if(seg.length){L.push('🛡️ *SEGUROS*');seg.forEach(s=>L.push('• '+s.ativ+' ('+s.pax+' pax)'));L.push('');}
+  // ajuste manual do roteiro
+  const exMsg=getResExtra(r.code);
+  if(exMsg.notas&&exMsg.notas.trim()){L.push('📝 *OBSERVAÇÕES*');exMsg.notas.trim().split('\n').forEach(l=>L.push(l));L.push('');}
+  // scripts
+  const dests=new Set();r.services.forEach(s=>{if(s.cat==='passeio'){const d=destinoOf(s.ativ);if(d)dests.add(d);}});
+  const rel=store.scripts.filter(sc=>dests.has(sc.destino));
+  if(rel.length){L.push('📌 *ORIENTAÇÕES IMPORTANTES*');rel.forEach(sc=>{L.push('');L.push('▸ '+sc.titulo);L.push(sc.texto);});L.push('');}
+  L.push('_Jericar Viagens_ 🌴');
+  return L.join('\n');
+}
+function openMessage(code){
+  const r=RES.find(x=>x.code===code);if(!r)return;
+  const msg=buildMessage(r);
+  openModal('Mensagem — '+r.pagador,
+    `<div class="msg-preview" id="msgPre">${esc(msg)}</div>`,
+    `<button class="btn btn-outline btn-sm" id="mCopy">📋 Copiar</button>
+     <button class="btn btn-solid btn-sm" id="mDl">⬇️ Baixar .txt</button>`);
+  document.getElementById('mCopy').onclick=()=>copyText(msg,'Mensagem copiada!');
+  document.getElementById('mDl').onclick=()=>downloadFile('roteiro_'+slug(r.pagador)+'.txt',msg);
+}
+function slug(s){return (s||'cliente').normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-zA-Z0-9]+/g,'_').replace(/^_+|_+$/g,'').toLowerCase().slice(0,40);}
+
+/* ================= PDF (abre página de impressão do navegador) ================= */
+function generatePDF(code){
+  const r=RES.find(x=>x.code===code);if(!r)return;
+  const doc='<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8"><title>Roteiro '+esc(r.pagador)+'</title></head>'
+    +'<body onload="setTimeout(function(){window.focus();window.print();},350)">'+buildPrintHTML(r)+'</body></html>';
+  const w=window.open('','_blank');
+  if(!w){toast('Permita pop-ups para gerar o PDF (ou use Ctrl+P na página).');return;}
+  w.document.open();w.document.write(doc);w.document.close();
+}
+function buildPrintHTML(r){
+  const days={};r.services.forEach(s=>{if(s.cat==='seguro')return;const d=s.day||'sem-data';(days[d]=days[d]||[]).push(s);});
+  const dayKeys=Object.keys(days).sort((a,b)=>a==='sem-data'?1:b==='sem-data'?-1:a.localeCompare(b));
+  let terrestre='';
+  dayKeys.forEach(d=>{
+    terrestre+=`<div class="p-day"><div class="p-daytitle">${d==='sem-data'?'Data a definir':fmtDia(d)+' — '+diaSemana(d)}</div>`;
+    days[d].forEach(s=>{
+      const ov=getOv(r.code,s);let det='';
+      if(s.cat==='passeio'){const c=cfgFor(s.ativ);const bits=[];
+        if(c.embInicio||c.embTermino)bits.push('Embarque: '+(c.embInicio||'—')+(c.embTermino?' às '+c.embTermino:''));
+        if(c.previstoFim)bits.push('Término por volta de '+c.previstoFim);
+        if(c.destino)bits.push('Destino: '+c.destino);det=bits.join(' · ');}
+      else if(s.cat==='transfer'){const bits=[];if(ov.transferHora)bits.push('Transfer às '+ov.transferHora);if(ov.janelaIni||ov.janelaFim)bits.push('Janela de embarque '+(ov.janelaIni||'—')+(ov.janelaFim?' às '+ov.janelaFim:''));if(ov.embarque||ov.desembarque)bits.push((ov.embarque||'—')+' → '+(ov.desembarque||'—'));det=bits.join(' · ');}
+      else if(s.cat==='voo'){const bits=[];if(ov.vooNum)bits.push('Voo '+ov.vooNum);if(ov.vooHora)bits.push('às '+ov.vooHora);if(ov.vooTrecho)bits.push(ov.vooTrecho);det=bits.join(' ');}
+      else if(s.cat==='hosp'){const bits=[];if(ov.hospNome)bits.push(ov.hospNome);if(ov.hospIn)bits.push('check-in '+ov.hospIn);if(ov.hospOut)bits.push('check-out '+ov.hospOut);det=bits.join(' · ');}
+      terrestre+=`<div class="p-svc"><span class="p-cat p-${s.cat}">${CAT_LABEL[s.cat]}</span> <b>${esc(s.ativ)}</b> — ${s.pax} pax${det?'<div class="p-det">'+esc(det)+'</div>':''}</div>`;
+    });
+    terrestre+='</div>';
+  });
+  // seguros
+  const seg=r.services.filter(s=>s.cat==='seguro');
+  let segHTML='';
+  if(seg.length){segHTML=`<div class="p-sec p-seg"><h3>🛡️ Seguros</h3>`+seg.map(s=>`<div class="p-svc">• ${esc(s.ativ)} — ${s.pax} pax</div>`).join('')+`</div>`;}
+  // voos consolidados
+  const voos=r.services.filter(s=>s.cat==='voo');
+  let vooHTML='';
+  if(voos.length){vooHTML=`<div class="p-sec"><h3>✈️ Dados de voo</h3>`+voos.map(s=>{const ov=getOv(r.code,s);return `<div class="p-svc">• ${esc(s.ativ)} — ${[ov.vooNum&&('Voo '+ov.vooNum),ov.vooHora&&('às '+ov.vooHora),ov.vooTrecho,s.day&&fmtDia(s.day)].filter(Boolean).map(esc).join(' · ')||'a confirmar'}</div>`;}).join('')+`</div>`;}
+  // hospedagem consolidada
+  const hosp=r.services.filter(s=>s.cat==='hosp');
+  let hospHTML='';
+  if(hosp.length){hospHTML=`<div class="p-sec"><h3>🏨 Hospedagem</h3>`+hosp.map(s=>{const ov=getOv(r.code,s);return `<div class="p-svc">• ${esc(ov.hospNome||s.ativ)} — ${[ov.hospIn&&('check-in '+ov.hospIn),ov.hospOut&&('check-out '+ov.hospOut)].filter(Boolean).map(esc).join(' · ')||'datas a confirmar'}</div>`;}).join('')+`</div>`;}
+  // ajuste manual do roteiro
+  const exPdf=getResExtra(r.code);
+  let notasHTML='';
+  if(exPdf.notas&&exPdf.notas.trim()){notasHTML=`<div class="p-sec" style="background:#fffbeb;border-color:#fde68a"><h3 style="color:#92400e;border-color:#fde68a">📝 Observações</h3><div style="font-size:13px;white-space:pre-wrap">${esc(exPdf.notas.trim())}</div></div>`;}
+  return `<style>
+    body{font-family:Arial,Helvetica,sans-serif;color:#1e293b;margin:16px;}
+    .p-page{padding:12px 4px;}
+    .p-header{background:linear-gradient(120deg,#0f766e,#0d9488);color:#fff;padding:20px 24px;border-radius:12px;margin-bottom:16px;}
+    .p-header h1{margin:0;font-size:22px;} .p-header .p-sub{opacity:.9;font-size:13px;margin-top:4px;}
+    .p-sec{border:1px solid #e2e8f0;border-radius:10px;padding:12px 16px;margin-bottom:12px;page-break-inside:avoid;}
+    .p-sec h3{margin:0 0 8px;font-size:15px;color:#0f766e;border-bottom:1px solid #e2e8f0;padding-bottom:6px;}
+    .p-day{border:1px solid #e2e8f0;border-radius:10px;padding:10px 14px;margin-bottom:10px;page-break-inside:avoid;}
+    .p-daytitle{font-weight:700;color:#0d9488;font-size:14px;margin-bottom:6px;}
+    .p-svc{font-size:13px;margin:5px 0;padding:4px 0;border-bottom:1px dashed #eef2f6;}
+    .p-det{font-size:12px;color:#64748b;margin-top:2px;margin-left:2px;}
+    .p-cat{font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;color:#fff;}
+    .p-passeio{background:#16a34a;} .p-transfer{background:#2563eb;} .p-voo{background:#7c3aed;} .p-hosp{background:#d97706;} .p-seguro{background:#dc2626;}
+    .p-seg{background:#fef2f2;border-color:#fecaca;} .p-seg h3{color:#b91c1c;border-color:#fecaca;}
+    .p-foot{text-align:center;color:#94a3b8;font-size:11px;margin-top:16px;}
+    .p-secttl{font-size:16px;font-weight:700;margin:16px 0 8px;color:#0f172a;}
+  </style>
+  <div class="p-page">
+    <div class="p-header"><h1>Roteiro de Viagem</h1><div class="p-sub">${esc(r.pagador)}${r.viajante?' · '+esc(r.viajante):''} — ${r.startDay?fmtDiaLongo(r.startDay):''}${r.endDay&&r.endDay!==r.startDay?' a '+fmtDiaLongo(r.endDay):''}</div><div class="p-sub">Código: ${esc(r.code)}</div></div>
+    ${notasHTML}
+    <div class="p-secttl">🗺️ Roteiro dia a dia</div>
+    ${terrestre||'<div class="muted">Sem serviços datados.</div>'}
+    ${vooHTML}
+    ${hospHTML}
+    ${segHTML}
+    <div class="p-foot">Jericar Viagens · Documento gerado automaticamente. Horários sujeitos a confirmação.</div>
+  </div>`;
+}
+
+/* ================= LEMBRETE DE BACKUP (a cada 10 min) ================= */
+document.getElementById('bkRemindNow').addEventListener('click',doBackup);
+document.getElementById('bkRemindLater').addEventListener('click',()=>document.getElementById('bkRemind').classList.remove('show'));
+setInterval(()=>{ if(changedSinceBackup)document.getElementById('bkRemind').classList.add('show'); }, 10*60*1000);
+
+/* ================= INIT ================= */
+if(!LS_OK)showStorageWarn();
+setView('lista');
+buildReservations();renderAll();
+</script>
+</body>
+</html>
